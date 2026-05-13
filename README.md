@@ -74,12 +74,100 @@ task-board/
 └── README.md              # 本说明文件
 ```
 
-## 技术栈
+## 开发技术栈
 
-- **Python 3.12**
-- **PySide6** — 现代 Qt GUI 框架，界面美观流畅
-- **SQLite** — 轻量级本地数据库，零配置
-- **PyInstaller** — 打包成独立 exe
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 编程语言 | Python 3.12 | 主力开发语言，生态丰富，开发效率高 |
+| GUI 框架 | PySide6 (Qt 6) | 官方 Qt Python 绑定，跨平台、高性能、原生渲染 |
+| 数据库 | SQLite 3 | Python 内置，零配置轻量级嵌入式数据库 |
+| 数据层 | dataclasses + sqlite3 | Python 原生数据类 + 标准库数据库接口，无额外依赖 |
+| 打包工具 | PyInstaller 6 | 将 Python 项目打包成独立 Windows exe |
+| 版本管理 | Git + GitHub | 代码版本控制和远程托管 |
+
+### 技术选型理由
+
+- **PySide6 vs tkinter**：tkinter 界面老旧，PySide6 支持圆角、阴影、渐变、动画等现代 UI 特性
+- **PySide6 vs PyQt6**：PySide6 是 Qt 官方维护，LGPL 协议更宽松，可免费商用
+- **SQLite vs JSON/MySQL**：比 JSON 支持复杂查询，比 MySQL 轻量无需安装服务
+- **Python vs C#/Electron**：开发速度最快，依赖最少，适合工具类桌面应用
+
+## 开发技术路线
+
+```
+Phase 1: 项目搭建 + 数据库设计
+    ├── 创建项目目录结构
+    ├── 设计 SQLite 表结构（categories + tasks）
+    ├── 实现数据库初始化和连接管理
+    └── 创建索引优化查询性能
+
+Phase 2: 数据模型层
+    ├── 定义 Task、Category 数据类（dataclass）
+    ├── 实现 CRUD 操作（增删改查）
+    ├── 实现筛选查询（按状态、分类、重要性、日期）
+    └── 实现任务移动和统计功能
+
+Phase 3: 任务卡片组件
+    ├── 自定义 QWidget 绘制圆角卡片背景
+    ├── QGraphicsDropShadowEffect 实现阴影效果
+    ├── 优先级色条 + 分类标签 + 截止日期显示
+    ├── 鼠标事件实现拖拽（press → move → release）
+    ├── QDrag + QMimeData 实现跨列拖放
+    └── QMenu 实现右键上下文菜单
+
+Phase 4: 看板主界面
+    ├── 三列 ColumnWidget 布局（QFrame + QScrollArea）
+    ├── 拖放接收（dragEnterEvent → dropEvent）
+    ├── 顶部渐变标题栏（qlineargradient）
+    ├── 分类筛选栏（动态生成 QPushButton）
+    └── 任务统计实时更新
+
+Phase 5: 对话框系统
+    ├── TaskDialog：新建/编辑任务弹窗
+    │   ├── QComboBox 优先级和分类选择
+    │   ├── QDateEdit 日期选择（日历弹出）
+    │   └── QCheckBox 重要标记和无日期选项
+    └── CategoryDialog：分类管理弹窗
+        ├── QListWidget 分类列表
+        └── 添加/删除分类操作
+
+Phase 6: 提醒系统
+    ├── QTimer 定时检查提醒（30秒间隔）
+    ├── 匹配当前时间与任务提醒时间
+    └── QMessageBox 弹窗提醒
+
+Phase 7: 打包发布
+    ├── PyInstaller --onefile --noconsole 打包
+    ├── 测试 exe 独立运行
+    └── 上传 GitHub 发布
+```
+
+### 架构设计
+
+```
+┌─────────────────────────────────────────────────┐
+│                   main.py (入口)                 │
+│              初始化数据库 → 启动 GUI              │
+├─────────────────────────────────────────────────┤
+│              main_window.py (主窗口)              │
+│  ┌──────────┬──────────┬──────────┐             │
+│  │ ColumnWidget│ ColumnWidget│ ColumnWidget│     │
+│  │  (待办列)  │ (进行中列) │ (已完成列) │     │
+│  │  ┌──────┐  │  ┌──────┐  │  ┌──────┐  │     │
+│  │  │TaskCard│  │  │TaskCard│  │  │TaskCard│  │     │
+│  │  └──────┘  │  └──────┘  │  └──────┘  │     │
+│  └──────────┴──────────┴──────────┘             │
+├─────────────────────────────────────────────────┤
+│  dialogs.py (对话框)    │  card_widget.py (卡片) │
+│  TaskDialog / CategoryDialog │  绘制/拖拽/菜单    │
+├─────────────────────────────────────────────────┤
+│              models.py (数据模型)                 │
+│         Task / Category + CRUD 操作              │
+├─────────────────────────────────────────────────┤
+│             database.py (数据库)                  │
+│          SQLite 连接 + 表结构初始化               │
+└─────────────────────────────────────────────────┘
+```
 
 ## 数据存储
 
