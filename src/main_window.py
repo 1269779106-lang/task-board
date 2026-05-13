@@ -293,7 +293,7 @@ class MainWindow(QMainWindow):
         # 动态分类按钮
         self._build_filter_buttons()
 
-        f_layout.addStretch()
+        self._filter_layout.addStretch()
         main_layout.addWidget(filter_bar)
 
         # ── 看板主体（三列） ──────────────────────────────
